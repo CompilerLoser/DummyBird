@@ -1,7 +1,0 @@
-/home/v-weifanghu/workspace/DummyBird/build/CMakeFiles/rebuild_cache.dir
-/home/v-weifanghu/workspace/DummyBird/build/CMakeFiles/edit_cache.dir
-/home/v-weifanghu/workspace/DummyBird/build/CMakeFiles/dummybird_test.dir
-/home/v-weifanghu/workspace/DummyBird/build/CMakeFiles/dummybird.dir
-/home/v-weifanghu/workspace/DummyBird/build/utils/CMakeFiles/rebuild_cache.dir
-/home/v-weifanghu/workspace/DummyBird/build/utils/CMakeFiles/edit_cache.dir
-/home/v-weifanghu/workspace/DummyBird/build/utils/CMakeFiles/utils.dir

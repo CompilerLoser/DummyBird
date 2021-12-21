@@ -1,0 +1,2 @@
+/usr/bin/ar qc libdummybird.a CMakeFiles/dummybird.dir/src/attn.cpp.o
+/usr/bin/ranlib libdummybird.a

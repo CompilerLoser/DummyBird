@@ -1,6 +1,6 @@
 #include "include/attention.h"
 int main()
 {
-    attn();
+    attention();
     return 0;
 }

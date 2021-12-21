@@ -1,5 +1,5 @@
 file(REMOVE_RECURSE
-  "CMakeFiles/dummybird.dir/src/attn.cpp.o"
+  "CMakeFiles/dummybird.dir/src/attention.cpp.o"
   "libdummybird.a"
   "libdummybird.pdb"
 )

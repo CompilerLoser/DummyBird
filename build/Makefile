@@ -155,29 +155,29 @@ utils/fast:
 	$(MAKE) $(MAKESILENT) -f utils/CMakeFiles/utils.dir/build.make utils/CMakeFiles/utils.dir/build
 .PHONY : utils/fast
 
-src/attn.o: src/attn.cpp.o
-.PHONY : src/attn.o
+src/attention.o: src/attention.cpp.o
+.PHONY : src/attention.o
 
 # target to build an object file
-src/attn.cpp.o:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/dummybird.dir/build.make CMakeFiles/dummybird.dir/src/attn.cpp.o
-.PHONY : src/attn.cpp.o
+src/attention.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dummybird.dir/build.make CMakeFiles/dummybird.dir/src/attention.cpp.o
+.PHONY : src/attention.cpp.o
 
-src/attn.i: src/attn.cpp.i
-.PHONY : src/attn.i
+src/attention.i: src/attention.cpp.i
+.PHONY : src/attention.i
 
 # target to preprocess a source file
-src/attn.cpp.i:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/dummybird.dir/build.make CMakeFiles/dummybird.dir/src/attn.cpp.i
-.PHONY : src/attn.cpp.i
+src/attention.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dummybird.dir/build.make CMakeFiles/dummybird.dir/src/attention.cpp.i
+.PHONY : src/attention.cpp.i
 
-src/attn.s: src/attn.cpp.s
-.PHONY : src/attn.s
+src/attention.s: src/attention.cpp.s
+.PHONY : src/attention.s
 
 # target to generate assembly for a file
-src/attn.cpp.s:
-	$(MAKE) $(MAKESILENT) -f CMakeFiles/dummybird.dir/build.make CMakeFiles/dummybird.dir/src/attn.cpp.s
-.PHONY : src/attn.cpp.s
+src/attention.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/dummybird.dir/build.make CMakeFiles/dummybird.dir/src/attention.cpp.s
+.PHONY : src/attention.cpp.s
 
 test/test.o: test/test.cpp.o
 .PHONY : test/test.o
@@ -214,9 +214,9 @@ help:
 	@echo "... dummybird"
 	@echo "... dummybird_test"
 	@echo "... utils"
-	@echo "... src/attn.o"
-	@echo "... src/attn.i"
-	@echo "... src/attn.s"
+	@echo "... src/attention.o"
+	@echo "... src/attention.i"
+	@echo "... src/attention.s"
 	@echo "... test/test.o"
 	@echo "... test/test.i"
 	@echo "... test/test.s"

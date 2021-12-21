@@ -8,7 +8,7 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
-  "/home/v-weifanghu/workspace/DummyBird/src/attn.cpp" "CMakeFiles/dummybird.dir/src/attn.cpp.o" "gcc" "CMakeFiles/dummybird.dir/src/attn.cpp.o.d"
+  "/home/v-weifanghu/workspace/DummyBird/src/attention.cpp" "CMakeFiles/dummybird.dir/src/attention.cpp.o" "gcc" "CMakeFiles/dummybird.dir/src/attention.cpp.o.d"
   )
 
 # Targets to which this target links.

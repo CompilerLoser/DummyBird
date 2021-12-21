@@ -69,28 +69,28 @@ include CMakeFiles/dummybird.dir/progress.make
 # Include the compile flags for this target's objects.
 include CMakeFiles/dummybird.dir/flags.make
 
-CMakeFiles/dummybird.dir/src/attn.cpp.o: CMakeFiles/dummybird.dir/flags.make
-CMakeFiles/dummybird.dir/src/attn.cpp.o: ../src/attn.cpp
-CMakeFiles/dummybird.dir/src/attn.cpp.o: CMakeFiles/dummybird.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/v-weifanghu/workspace/DummyBird/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/dummybird.dir/src/attn.cpp.o"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dummybird.dir/src/attn.cpp.o -MF CMakeFiles/dummybird.dir/src/attn.cpp.o.d -o CMakeFiles/dummybird.dir/src/attn.cpp.o -c /home/v-weifanghu/workspace/DummyBird/src/attn.cpp
+CMakeFiles/dummybird.dir/src/attention.cpp.o: CMakeFiles/dummybird.dir/flags.make
+CMakeFiles/dummybird.dir/src/attention.cpp.o: ../src/attention.cpp
+CMakeFiles/dummybird.dir/src/attention.cpp.o: CMakeFiles/dummybird.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/v-weifanghu/workspace/DummyBird/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object CMakeFiles/dummybird.dir/src/attention.cpp.o"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT CMakeFiles/dummybird.dir/src/attention.cpp.o -MF CMakeFiles/dummybird.dir/src/attention.cpp.o.d -o CMakeFiles/dummybird.dir/src/attention.cpp.o -c /home/v-weifanghu/workspace/DummyBird/src/attention.cpp
 
-CMakeFiles/dummybird.dir/src/attn.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/dummybird.dir/src/attn.cpp.i"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/v-weifanghu/workspace/DummyBird/src/attn.cpp > CMakeFiles/dummybird.dir/src/attn.cpp.i
+CMakeFiles/dummybird.dir/src/attention.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/dummybird.dir/src/attention.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/v-weifanghu/workspace/DummyBird/src/attention.cpp > CMakeFiles/dummybird.dir/src/attention.cpp.i
 
-CMakeFiles/dummybird.dir/src/attn.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/dummybird.dir/src/attn.cpp.s"
-	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/v-weifanghu/workspace/DummyBird/src/attn.cpp -o CMakeFiles/dummybird.dir/src/attn.cpp.s
+CMakeFiles/dummybird.dir/src/attention.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/dummybird.dir/src/attention.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/v-weifanghu/workspace/DummyBird/src/attention.cpp -o CMakeFiles/dummybird.dir/src/attention.cpp.s
 
 # Object files for target dummybird
 dummybird_OBJECTS = \
-"CMakeFiles/dummybird.dir/src/attn.cpp.o"
+"CMakeFiles/dummybird.dir/src/attention.cpp.o"
 
 # External object files for target dummybird
 dummybird_EXTERNAL_OBJECTS =
 
-libdummybird.a: CMakeFiles/dummybird.dir/src/attn.cpp.o
+libdummybird.a: CMakeFiles/dummybird.dir/src/attention.cpp.o
 libdummybird.a: CMakeFiles/dummybird.dir/build.make
 libdummybird.a: CMakeFiles/dummybird.dir/link.txt
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/v-weifanghu/workspace/DummyBird/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX static library libdummybird.a"

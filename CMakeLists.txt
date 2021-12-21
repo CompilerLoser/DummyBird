@@ -8,7 +8,6 @@ include_directories(
     ${CMAKE_SOURCE_DIR}
 )
 
-
 set(CMAKE_BUILD_TYPE Debug)
 
 if (TIME)
@@ -16,15 +15,21 @@ if (TIME)
     add_definitions(-DTIME)
 endif (TIME)
 
-
-
 add_subdirectory(utils)
 
 aux_source_directory(src SRC)
 
 add_library(${PROJECT_NAME} STATIC ${SRC})
 
-add_executable(${PROJECT_NAME}_test test/test.cpp)
-target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME} utils)  
+add_executable(
+    ${PROJECT_NAME}_test 
+    test/test.cpp
+)
+
+target_link_libraries(
+    ${PROJECT_NAME}_test 
+    ${PROJECT_NAME} 
+    utils
+)  
 
 

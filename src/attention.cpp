@@ -20,15 +20,14 @@ void attention()
  * @param HL hidden_size
  * @param res QL*HL
  */
-template <typename T>
-void AttentionFull(const T *Q, const T *K, const T *V,
+void AttentionFull(const float *Q, const float *K, const float *V,
                    int QL, int KL, int HL,
-                   T *res)
+                   float *res)
 {
-    T *temp = new T[QL * KL];
-    T *line_exp_sum = new T[QL];
-    memset(temp, 0, QL * KL * sizeof(T));
-    memset(line_exp_sum, 0, QL * sizeof(T));
+    float *temp = new float[QL * KL];
+    float *line_exp_sum = new float[QL];
+    memset(temp, 0, QL * KL * sizeof(float));
+    memset(line_exp_sum, 0, QL * sizeof(float));
 
     double dk_inv = 1.0 / sqrt(HL);
 

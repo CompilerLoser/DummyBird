@@ -3,27 +3,23 @@
 
 void attention();
 
-template <typename T>
-void AttentionFull(const T* Q, const T* K, const T* V, 
+void AttentionFull(const float* Q, const float* K, const float* V, 
                     int QL, int KL, int HL, 
-                    T* res);
+                    float* res);
 
-template <typename T>
-void AttentionLocal(const T* Q, const T* K, const T* V, 
+void AttentionLocal(const float* Q, const float* K, const float* V, 
                     int M, int N, int L, 
                     int Qs, int Ks, int Vs, 
-                    int local_blocks, T* res);
+                    int local_blocks, float* res);
                     
-template <typename T>
-void AttentionWindow(const T* Q, const T* K, const T* V, 
+void AttentionWindow(const float* Q, const float* K, const float* V, 
                     int M, int N, int L, 
                     int Qs, int Ks, int Vs, 
-                    int window_blocks, T* res);
+                    int window_blocks, float* res);
 
-template <typename T>
-void AttentionRandom(const T* Q, const T* K, const T* V, 
+void AttentionRandom(const float* Q, const float* K, const float* V, 
                     int M, int N, int L, 
                     int Qs, int Ks, int Vs, 
-                    int rand_blocks, T* res);
+                    int rand_blocks, float* res);
 
 #endif 

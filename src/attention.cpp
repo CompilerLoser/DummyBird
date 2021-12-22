@@ -8,10 +8,12 @@ void attention()
     foo();
 }
 
+
 /**
  * @brief Given the projected matrixs Q, K, V, compute the full attn scores.
  * add all scores to res.
  * Serialize all SCCs, min fusion.
+ * 
  * @param Q QL*HL
  * @param K KL*HL
  * @param V KL*HL
@@ -58,4 +60,52 @@ void AttentionFull(const float *Q, const float *K, const float *V,
 
     delete[] temp;
     delete[] line_exp_sum;
+}
+
+/**
+ * @brief 
+ *  
+ * @param Q QL*QW -> before projected
+ * @param K KL*QK 
+ * @param V KL*QK
+ * @param QL Q sequence sizes 
+ * @param QW Q sequence length 
+ * @param KL  
+ * @param KW 
+ * @param HL projected out dims 
+ * @param Head 
+ * X@param Batch  
+ * @param res 
+ */
+
+void MultiHeadAttentionFull(const float *Q, const float *K, const float *V,
+                            int QL, int QW, int KL, int KW, int HL, int Head,
+                            float* res)
+{
+    /*
+    new WQ[QW*HL*Head] WK[KW*HL*Head] WV[KW*HL*Head]
+    for each Heads
+        Q = Q @ &WQ[Head*QW*HL]
+        ...
+        AttentionFull(Q, K, V, QL, KL, HL, &res[Head*QL*HL])
+    */
+    return;
+}
+
+/**
+ * @brief 
+ * compute global attention patterns 
+ * @param local_width local_size * K_blocksize in BigBird paper 
+ * @param local_height local_size * Q_blocksize in BigBird paper
+ */
+void AttentionGlobal(const float* Q, const float* K, const float* V, 
+                    int QL, int KL, int HL, 
+                    int local_width, int local_height,
+                    float* res)
+{
+    float* temp_top = new float[local_height * KL];
+    float* temp_left = new float[(QL - local_width) * local_width];
+
+    /* compute top 
+    
 }

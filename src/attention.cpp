@@ -160,14 +160,33 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
         for (int j = 0; j < HL; ++j)
             for (int l = 0; l < local_width; ++l)
                 res[i * HL + j] += temp_left[(i - local_height) * local_width + l] * V[l * HL + j];
-
 }
 
-void AttentionWindow(const float* Q, const float* K, const float* V, 
-                    int M, int N, int L, 
-                    int window_size, int window_stride,
-                    float* res)
+/**
+ * @brief Simple window attention in BigBird.
+ * The most naive way: compute scores row by row.
+ * @param window_len Window length in a row
+ * @param window_height How many rows passed when the window are going to stride.
+ * @param window_stride Window stride length
+ */
+void AttentionWindow(const float *Q, const float *K, const float *V,
+                     int QL, int KL, int HL,
+                     int window_size, int window_height, int window_stride,
+                     float *res)
 {
+    float *temp = new float[QL * window_size];
+    float *line_exp_sum = new float[QL];
+    memset(temp, 0, QL * window_size * sizeof(float));
+    memset(line_exp_sum, 0, QL * sizeof(float));
+
+    for (int i = 0; i < QL; ++i)
+    {
+        int window_start = 000000000000000;
+        int window_end = 0000000000000;
+        for (int j = window_start; j < window_end; ++j)
+            for (int l = 0; l < HL; ++l)
+                temp[i * window_size + j - window_start] += Q[i * QL + l] * K[j * KL + l];
+    }
 
     return;
 }

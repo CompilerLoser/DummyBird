@@ -18,8 +18,8 @@ void AttentionGlobal(const float* Q, const float* K, const float* V,
                     
 void AttentionWindow(const float* Q, const float* K, const float* V, 
                     int M, int N, int L, 
-                    int Qs, int Ks, int Vs, 
-                    int window_blocks, float* res);
+                    int window_size, int window_stride,
+                    float* res);
 
 void AttentionRandom(const float* Q, const float* K, const float* V, 
                     int M, int N, int L, 

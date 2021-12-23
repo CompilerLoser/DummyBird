@@ -106,7 +106,7 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
     float *temp_left = new float[(QL - local_height) * local_width];
     float *line_exp_sum = new float[QL];
     memset(temp_top, 0, local_height * KL * sizeof(float));
-    memset(temp_left, 0, (QL * local_height) * local_width * sizeof(float));
+    memset(temp_left, 0, (QL - local_height) * local_width * sizeof(float));
     memset(line_exp_sum, 0, QL * sizeof(float));
 
     double dk_inv = 1.0 / sqrt(HL);
@@ -161,4 +161,13 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
             for (int l = 0; l < local_width; ++l)
                 res[i * HL + j] += temp_left[(i - local_height) * local_width + l] * V[l * HL + j];
 
+}
+
+void AttentionWindow(const float* Q, const float* K, const float* V, 
+                    int M, int N, int L, 
+                    int window_size, int window_stride,
+                    float* res)
+{
+
+    return;
 }

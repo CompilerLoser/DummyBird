@@ -155,8 +155,8 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
 
     for (int i = local_height; i < QL; ++i)
         for (int j = 0; j < local_width; ++j)
-            temp_left[(i - local_height) * local_width + j] =
-                exp(temp_left[(i - local_height) * local_width + j]) / line_exp_sum[i];
+            temp_left[(i - local_height) * local_width + j] = /*the Σei should contain all e0 = 1, that is (KL - local_width)*/
+                exp(temp_left[(i - local_height) * local_width + j]) / (line_exp_sum[i] + KL - local_width); /* place here avoiding imperfect loop nest.
 
     /* global score @ V */
     /* part 1 */
@@ -201,6 +201,13 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
         for (int j = window_start; j < window_end; ++j)
             for (int l = 0; l < HL; ++l)
                 temp[i * window_size + j - window_start] += Q[i * QL + l] * K[j * KL + l];
+        
+        /* softmax */
+        for(int i = 0; i<QL; ++i)
+            for(int j =0; j<window_size; ++j)
+                line_exp_sum[i] += exp(temp[i*window_size+j]);
+        for(int i=0; i<)
+
         
          
     }

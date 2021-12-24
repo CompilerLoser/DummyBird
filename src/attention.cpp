@@ -1,3 +1,9 @@
+/**
+ * This file implement the SINGLE basic attention patterns in BigBird.
+ * NOTE when compose different patterns in a attention, the scores matrixs
+ * should be merged and then normalized.
+ */
+
 #include "include/attention.h"
 #include "utils/helper.h"
 #include <cmath>
@@ -7,6 +13,9 @@ void attention()
 {
     foo();
 }
+
+#define max(x, y)  x > y ? x : y
+#define min(x, y)  x < y ? x : y
 
 /**
  * @brief Given the projected matrixs Q, K, V, compute the full attn scores.
@@ -179,13 +188,21 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
     memset(temp, 0, QL * window_size * sizeof(float));
     memset(line_exp_sum, 0, QL * sizeof(float));
 
+    // for now we assume the first line window start from 0.
+    int first_line_padding = 0;
+
     for (int i = 0; i < QL; ++i)
     {
-        int window_start = 000000000000000;
-        int window_end = 0000000000000;
+        int window_start = first_line_padding + int(i / window_height) * window_stride; 
+        int window_end = window_start + window_size;
+        window_start = max(window_start, 0);
+        window_end = min(window_end, KL);
+
         for (int j = window_start; j < window_end; ++j)
             for (int l = 0; l < HL; ++l)
                 temp[i * window_size + j - window_start] += Q[i * QL + l] * K[j * KL + l];
+        
+         
     }
 
     return;

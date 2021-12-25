@@ -5,6 +5,9 @@
 #include <chrono>
 #include <string>
 
+#define max(x, y)  x > y ? x : y
+#define min(x, y)  x < y ? x : y
+
 using namespace std::chrono;
 
 class Clk

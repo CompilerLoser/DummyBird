@@ -1,24 +1,22 @@
 /**
- * This file implement the SINGLE basic attention patterns in BigBird.
- * NOTE when compose different patterns in a attention, the scores matrixs
- * should be merged and then normalized.
+ * This file implement the SINGLE pattern attention functions come from BigBird.
  */
-
 #include "include/attention.h"
 #include "utils/helper.h"
 #include <cmath>
 #include <memory.h>
+
+void AttnConfig::initQKV(int QL, int KL, int HL)
+{
+}
 
 void attention()
 {
     foo();
 }
 
-#define max(x, y)  x > y ? x : y
-#define min(x, y)  x < y ? x : y
-
 /**
- * @brief Given the projected matrixs Q, K, V, compute the full attn scores.
+ * Given the projected matrixs Q, K, V, compute the full attn scores.
  * add all scores to res.
  * Serialize all SCCs, min fusion.
  *
@@ -71,8 +69,6 @@ void AttentionFull(const float *Q, const float *K, const float *V,
 }
 
 /**
- * @brief
- *
  * @param Q QL*QW -> before projected
  * @param K KL*QK
  * @param V KL*QK
@@ -101,8 +97,8 @@ void MultiHeadAttentionFull(const float *Q, const float *K, const float *V,
 }
 
 /**
- * @brief
  * compute global attention patterns
+ * TODO: Support any sequences pair that is symmetric along the diagonal
  * @param local_width local_size(number of blocks) * K_blocksize in BigBird paper
  * @param local_height local_size * Q_blocksize in BigBird paper
  */
@@ -156,9 +152,10 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
     for (int i = local_height; i < QL; ++i)
         for (int j = 0; j < local_width; ++j)
             temp_left[(i - local_height) * local_width + j] = /*the Σei should contain all e0 = 1, that is (KL - local_width)*/
-                exp(temp_left[(i - local_height) * local_width + j]) / (line_exp_sum[i] + KL - local_width); /* place here avoiding imperfect loop nest.
+                exp(temp_left[(i - local_height) * local_width + j]) /
+                (line_exp_sum[i] + KL - local_width); /* No LICM, avoiding create imperfect loop nest.
 
-    /* global score @ V */
+   /* global score @ V */
     /* part 1 */
     for (int i = 0; i < local_height; ++i)
         for (int j = 0; j < HL; ++j)
@@ -172,7 +169,7 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
 }
 
 /**
- * @brief Simple window attention in BigBird.
+ * Simple window attention in BigBird.
  * The most naive way: compute scores row by row.
  * @param window_len Window length in a row
  * @param window_height How many rows passed when the window are going to stride.
@@ -193,7 +190,7 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
 
     for (int i = 0; i < QL; ++i)
     {
-        int window_start = first_line_padding + int(i / window_height) * window_stride; 
+        int window_start = first_line_padding + int(i / window_height) * window_stride;
         int window_end = window_start + window_size;
         window_start = max(window_start, 0);
         window_end = min(window_end, KL);
@@ -201,16 +198,38 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
         for (int j = window_start; j < window_end; ++j)
             for (int l = 0; l < HL; ++l)
                 temp[i * window_size + j - window_start] += Q[i * QL + l] * K[j * KL + l];
-        
-        /* softmax */
-        for(int i = 0; i<QL; ++i)
-            for(int j =0; j<window_size; ++j)
-                line_exp_sum[i] += exp(temp[i*window_size+j]);
-        for(int i=0; i<)
-
-        
-         
     }
+    /* softmax */
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < window_size; ++j)
+            line_exp_sum[i] += exp(temp[i * window_size + j]);
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < window_size; ++j)
+            temp[i * window_size + j] = exp(temp[i * window_size + j]) /
+                                            line_exp_sum[i] + (KL - window_size);
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < HL; ++j)
+            for (int l = 0; l < window_size; ++l){
+                int col_start = first_line_padding + int(i / window_height) * window_stride;
+                res[i * HL + j] += temp[i * window_size + l] * V[max(col_start, 0) * l + j];
+            }
+}
 
-    return;
+/**
+ * For now, assume that random attention can exist between any two tokens. 
+ * # question 1: how to generate the "random" ? Can we take advantage of 
+ * randomness due to dynamic scheduling when executing multi-head attention?
+ * 
+ * @param random_size the attention number of a query token. 
+ */
+void AttentionRandom(const float *Q, const float *K, const float *V,
+                     int QL, int KL, int HL,
+                     int random_size,
+                     float *res)
+{
+    //generate a random matrix used to specify the token noted for each row
+
+    //compute scores as normal
+
+    //compute attention result
 }

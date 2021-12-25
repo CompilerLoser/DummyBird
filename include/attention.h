@@ -15,11 +15,13 @@ private:
 class AttnConfig
 {
 public:
-    AttnConfig(int QLen, int KLen, int HLen, AttnPattern &pattern) : QL(QLen = 2048), KL(KLen = 2048), HL(HLen = 512), pattern(pattern) {
-        initQKV();
+    AttnConfig(int QLen, int KLen, int HLen, AttnPattern &pattern) : \
+    QL(QLen = 2048), KL(KLen = 2048), HL(HLen = 512), pattern(pattern) {
+        initQKV(QL, KL, HL);
     }
     ~AttnConfig() = default;
 
+    std::string device;
 private:
     int QL;
     int KL;
@@ -27,7 +29,7 @@ private:
     float *Q;
     float *K;
     float *V;
-    void initQKV();
+    void initQKV(int QL, int KL, int HL);
 
     AttnPattern &pattern;
 };
@@ -43,6 +45,8 @@ public:
     virtual void runWindow();
     virtual void runRandom();
     virtual void runComposed();
+protected:
+    AttnConfig& conf;
 };
 
 class DummyAttention : public Attention
@@ -66,8 +70,8 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
                      float *res);
 
 void AttentionWindow(const float *Q, const float *K, const float *V,
-                     int M, int N, int L,
-                     int window_size, int window_stride,
+                     int QL, int KL, int HL,
+                     int window_size, int window_height, int window_stride,
                      float *res);
 
 void AttentionRandom(const float *Q, const float *K, const float *V,

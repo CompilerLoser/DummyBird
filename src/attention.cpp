@@ -166,6 +166,10 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
         for (int j = 0; j < HL; ++j)
             for (int l = 0; l < local_width; ++l)
                 res[i * HL + j] += temp_left[(i - local_height) * local_width + l] * V[l * HL + j];
+
+    delete[] temp_top;
+    delete[] temp_left;
+    delete[] line_exp_sum;
 }
 
 /**
@@ -188,6 +192,8 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
     // for now we assume the first line window start from 0.
     int first_line_padding = 0;
 
+    double dk_inv = 1.0 / sqrt(HL);
+
     for (int i = 0; i < QL; ++i)
     {
         int window_start = first_line_padding + int(i / window_height) * window_stride;
@@ -197,7 +203,7 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
 
         for (int j = window_start; j < window_end; ++j)
             for (int l = 0; l < HL; ++l)
-                temp[i * window_size + j - window_start] += Q[i * QL + l] * K[j * KL + l];
+                temp[i * window_size + j - window_start] += Q[i * HL + l] * K[j * HL + l];
     }
     /* softmax */
     for (int i = 0; i < QL; ++i)
@@ -205,31 +211,65 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
             line_exp_sum[i] += exp(temp[i * window_size + j]);
     for (int i = 0; i < QL; ++i)
         for (int j = 0; j < window_size; ++j)
-            temp[i * window_size + j] = exp(temp[i * window_size + j]) /
-                                            line_exp_sum[i] + (KL - window_size);
+            temp[i * window_size + j] = exp(temp[i * window_size + j]*dk_inv) /
+                                            line_exp_sum[i] +
+                                        (KL - window_size);
     for (int i = 0; i < QL; ++i)
         for (int j = 0; j < HL; ++j)
-            for (int l = 0; l < window_size; ++l){
+            for (int l = 0; l < window_size; ++l)
+            {
                 int col_start = first_line_padding + int(i / window_height) * window_stride;
                 res[i * HL + j] += temp[i * window_size + l] * V[max(col_start, 0) * l + j];
             }
+    delete[] temp;
+    delete[] line_exp_sum;
 }
 
 /**
- * For now, assume that random attention can exist between any two tokens. 
- * # question 1: how to generate the "random" ? Can we take advantage of 
- * randomness due to dynamic scheduling when executing multi-head attention?
- * 
- * @param random_size the attention number of a query token. 
+ * For now, assume that random attention can exist between any two tokens.
+ *
+ * @param random_size the attention number of a query token.
  */
 void AttentionRandom(const float *Q, const float *K, const float *V,
                      int QL, int KL, int HL,
                      int random_size,
                      float *res)
 {
-    //generate a random matrix used to specify the token noted for each row
+    int *random_key_pos = new int[QL * random_size];
+    float *scores = new float[QL * random_size];
+    float *line_exp_sum = new float[QL];
+    memset(line_exp_sum, 0, QL * sizeof(float));
+    memset(scores, 0, QL * random_size * sizeof(float));
 
-    //compute scores as normal
+    double dk_inv = 1.0 / sqrt(HL);
+    // generate a random matrix used to specify the token attend for each row
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < random_size; ++j)
+            random_key_pos[i * QL + j] = random(KL);
+    // compute scores as normal
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < random_size; ++j)
+            for (int l = 0; l < HL; ++l)
+            {
+                int col_pos = random_key_pos[i * random_size + j];
+                scores[i * random_size + col_pos] += Q[i * HL + l] * K[col_pos * HL + l];
+            }
+    for(int i = 0; i< QL; ++i)
+        for(int j =0; j<random_size; ++j)
+            line_exp_sum[i] += exp(random_key_pos[i*random_size+j]);
+    for(int i =0; i<QL; ++i)
+        for(int j = 0; j<random_size; ++j)
+            scores[i*random_size+j] = exp(scores[i*random_size+j]*dk_inv) / \
+            (line_exp_sum[i] + KL - random_size);
 
-    //compute attention result
+    // compute attention result
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < HL; ++j)
+            for (int l = 0; l < random_size; ++l){
+                int row = random_key_pos[i*random_size+l];
+                res[i*HL + j] += scores[i*random_size+l] * V[row*HL + j];
+            }
+    delete[] random_key_pos;
+    delete[] scores;
+    delete[] line_exp_sum;
 }

@@ -7,6 +7,7 @@
 
 #define max(x, y)  x > y ? x : y
 #define min(x, y)  x < y ? x : y
+#define random(x)  (rand() % x)
 
 using namespace std::chrono;
 

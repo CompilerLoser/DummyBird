@@ -1,7 +1,5 @@
 #include "utils/helper.h"
-#include "include/attention.h"
-#include <cmath>
-#include <memory.h>
+#include "include/composed_attention.h"
 
 static bool in_rand_cols(int col, int *rand_line, int random_size)
 {
@@ -17,20 +15,21 @@ static void compute_rand_cols(int length, int random_size, int local_width, int 
     for (int i = 0; i < length; ++i)
         for (int j = 0; j < random_size; ++j)
         {
-            rand_cols[j] = random(KL);
+            int rand_v = random(KL);
             while (
-                rand_cols[j] < local_width ||
-                (rand_cols[j] < min(window_index[i] + window_size,KL)) && (rand_cols[j] > window_index[i]) ||
-                in_rand_cols(rand_cols[j], &rand_cols[i * random_size], random_size))
+                rand_v < local_width ||
+                (rand_v > window_index[i]) && (rand_v < window_index[i] + window_size) ||
+                in_rand_cols(rand_v, &rand_cols[i * random_size], random_size))
             {
-                rand_cols[j] = random(KL);
+                rand_v = random(KL);
             }
+            rand_cols[i*random_size+j] = rand_v;
         }
 }
 
 /**
  * Dummy code of the implementation detials designed in BigBird Appendix.
- * TODO: write the simplified compute pattern notes. 
+ * TODO: write the simplified compute pattern notes.
  * TODO: debug and check result.
  */
 void AttentionComposed(const float *Q, const float *K, const float *V, int QL, int KL, int HL,
@@ -53,13 +52,14 @@ void AttentionComposed(const float *Q, const float *K, const float *V, int QL, i
     for (int i = 0; i < QL - local_height; ++i)
         window_index[i] = max(0, start_padding + int(i / window_height) * window_stride);
     compute_rand_cols(QL - local_height, random_size, local_width, start_padding, window_size, KL, window_index, rand_cols);
-
+    
     // compute scores
     /* top local_height rows of score matrix, compute as S[i, j] = Q[i,:] @ KT[:,j], i<local_height. */
     for (int i = 0; i < local_height; ++i)
         for (int j = 0; j < KL; ++j)
             for (int l = 0; l < HL; ++l)
                 scores_localtop[i * KL + j] += Q[i * HL + l] * K[i * HL + l];
+
     /* other scores, depend on the paddings, some score value in window score part may be 0. */
     int score_len = window_size + random_size + local_width;
     for (int i = 0; i < QL - local_height; ++i)
@@ -68,12 +68,16 @@ void AttentionComposed(const float *Q, const float *K, const float *V, int QL, i
         for (int j = 0; j < local_width; ++j)
             for (int l = 0; l < HL; ++l)
                 scores[i * score_len + j] += Q[idx * HL + l] * K[j * HL + l]; /* S[i,j] = Q[i,:] @ KT[:,j], j<local_width, i>local_height */
-        for (int j = max(local_width,local_width-window_index[i]); j < j + min(window_size, KL-window_index[i]); ++j) //do not compute padding scores
+        int window_score_start = max(local_width, local_width - window_index[i]);
+        int window_score_end = window_score_start + min(window_size, KL - window_index[i]);
+        for (int j = window_score_start; j < window_score_end; ++j) // do not compute padding scores
             for (int l = 0; l < HL; ++l)
                 scores[i * score_len + j] += Q[idx * HL + l] * K[(window_index[i] + j - local_width) * HL + l]; /* S[i,j] = Q[i,:] @ KT[:, window_index[i]]*/
-        for (int j = local_width + window_size; j < score_len; ++j)
-            for (int l = 0; l < HL; ++l)
-                scores[i * score_len + j] += Q[idx * HL + l] * K[(rand_cols[i * random_size + j - local_width - window_size]) * HL + l];/* S[i,j] = Q[i,:] @ KT[:,rand_cols[i]]*/
+        for (int j = local_width + window_size; j < score_len; ++j){
+            for (int l = 0; l < HL; ++l){
+                scores[i * score_len + j] += Q[idx * HL + l] * K[(rand_cols[i * random_size + j - local_width - window_size]) * HL + l]; /* S[i,j] = Q[i,:] @ KT[:,rand_cols[i]]*/
+            }
+    }
     }
 
     // softmax
@@ -95,25 +99,26 @@ void AttentionComposed(const float *Q, const float *K, const float *V, int QL, i
             scores[i * score_len + j] = exp(scores[i * score_len + j] / dk_inv) / exp_sum[i + local_height];
     }
 
-    //compute res
-    for(int i =0; i<local_height; ++i)
-        for(int j =0; j< HL; ++j)
-            for(int l = 0; l<KL; ++l)
-                res[i*HL +j] += scores_localtop[i*KL+l] * V[l*HL + j];
+    // compute res
+    for (int i = 0; i < local_height; ++i)
+        for (int j = 0; j < HL; ++j)
+            for (int l = 0; l < KL; ++l)
+                res[i * HL + j] += scores_localtop[i * KL + l] * V[l * HL + j];
 
-    for(int i =local_height; i<QL; ++i)
-        for(int j=0; j<HL; ++j){
-            for(int l=0; l<local_width; ++l)
-                res[i*HL+j] += scores[(i-local_height)*score_len+l] * V[l*HL +j];
-            for(int l = local_width; l<local_width+window_size; ++l)
-                res[i*HL +j] += scores[(i-local_height)*score_len+l] * V[(window_index[i-local_height]+l-local_width)*HL + j];
-            for(int l = local_width+window_size; l<score_len; ++l)
-                res[i*HL +j] += scores[(i-local_height)*score_len+l] * V[(rand_cols[l-local_width-window_size])*HL +j];
+    for (int i = local_height; i < QL; ++i)
+        for (int j = 0; j < HL; ++j)
+        {
+            for (int l = 0; l < local_width; ++l)
+                res[i * HL + j] += scores[(i - local_height) * score_len + l] * V[l * HL + j];
+            for (int l = local_width; l < local_width + window_size; ++l)
+                res[i * HL + j] += scores[(i - local_height) * score_len + l] * V[(window_index[i - local_height] + l - local_width) * HL + j];
+            for (int l = local_width + window_size; l < score_len; ++l)
+                res[i * HL + j] += scores[(i - local_height) * score_len + l] * V[(rand_cols[l - local_width - window_size]) * HL + j];
         }
 
     delete[] rand_cols;
     delete[] window_index;
     delete[] scores_localtop;
     delete[] scores;
-    delete[] exp_sum; 
+    delete[] exp_sum;
 }

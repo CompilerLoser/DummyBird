@@ -3,9 +3,6 @@
  */
 #include "include/attention.h"
 #include "utils/helper.h"
-#include <cmath>
-#include <memory.h>
-
 
 
 void attention()

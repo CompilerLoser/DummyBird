@@ -73,11 +73,9 @@ void AttentionComposed(const float *Q, const float *K, const float *V, int QL, i
         for (int j = window_score_start; j < window_score_end; ++j) // do not compute padding scores
             for (int l = 0; l < HL; ++l)
                 scores[i * score_len + j] += Q[idx * HL + l] * K[(window_index[i] + j - local_width) * HL + l]; /* S[i,j] = Q[i,:] @ KT[:, window_index[i]]*/
-        for (int j = local_width + window_size; j < score_len; ++j){
-            for (int l = 0; l < HL; ++l){
+        for (int j = local_width + window_size; j < score_len; ++j)
+            for (int l = 0; l < HL; ++l)
                 scores[i * score_len + j] += Q[idx * HL + l] * K[(rand_cols[i * random_size + j - local_width - window_size]) * HL + l]; /* S[i,j] = Q[i,:] @ KT[:,rand_cols[i]]*/
-            }
-    }
     }
 
     // softmax

@@ -75,8 +75,8 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
                      float *res);
 
 void AttentionRandom(const float *Q, const float *K, const float *V,
-                     int M, int N, int L,
-                     int Qs, int Ks, int Vs,
-                     int rand_blocks, float *res);
+                     int QL, int KL, int HL,
+                     int random_size,
+                     float *res);
 
 #endif

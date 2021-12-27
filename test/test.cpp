@@ -62,7 +62,30 @@ void test_local_attn(int QL, int KL, int HL, int local_w, int local_h)
     delete[] V;
     delete[] res;
 }
+void test_random(int QL, int KL, int HL, \
+                int random_size)
+{
+    float* Q = new float[QL*HL];
+    float* K = new float[KL*HL];
+    float* V = new float[KL*HL];
+    float* res = new float[QL*HL];
 
+#ifdef TIME
+    Clk timer("Random");
+#endif
+    AttentionRandom(Q, K, V, QL, KL, HL, random_size, res);
+#ifdef TIME
+    Clk::printDuration(timer);
+#endif
+
+/* TODO: check result.*/
+
+    delete[] Q;
+    delete[] K;
+    delete[] V;
+    delete[] res;
+
+}
 void test_composed(int QL, int KL, int HL, \
                 int local_w, int local_h, int random_size, \
                 int window_size, int window_stride, int window_height)
@@ -103,17 +126,17 @@ int main(int argc, char **argv)
     QL = 2048;
     KL = 2048;
     HL = 512;
-    local_h = 4;
-    local_w = 4;
-    window_stride = 2;
-    window_size = 6;
-    window_height = 2;
-    random_size = 4;
+    local_h = 64;
+    local_w = 64;
+    window_stride = 4;
+    window_size = 64;
+    window_height = 16;
+    random_size = 2;
     
-
-    test_full_attn(QL, KL, HL);
+    test_random(QL, KL, HL, random_size);
+    //test_full_attn(QL, KL, HL);
     test_local_attn(QL, KL, HL, local_w, local_h);
-    test_composed(QL, KL, HL, local_h, local_w, random_size, window_size, window_stride, window_height);
+    //test_composed(QL, KL, HL, local_h, local_w, random_size, window_size, window_stride, window_height);
 
     return 0;
 }

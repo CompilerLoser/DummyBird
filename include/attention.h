@@ -12,14 +12,14 @@ private:
     enum ptn {FULL, GLOBAL, WINDOW, RANDOM, COMPOSED};
 };
 
-class AttnConfig
+class AttnBase
 {
 public:
-    AttnConfig(int QLen, int KLen, int HLen, AttnPattern &pattern) : \
+    AttnBase(int QLen, int KLen, int HLen, AttnPattern &pattern) : \
     QL(QLen = 2048), KL(KLen = 2048), HL(HLen = 512), pattern(pattern) {
         initQKV(QL, KL, HL);
     }
-    ~AttnConfig() = default;
+    ~AttnBase() = default;
 
     std::string device;
 private:
@@ -33,11 +33,11 @@ private:
 
     AttnPattern &pattern;
 };
-
+/*
 class Attention
 {
 public:
-    Attention(AttnConfig& config);
+    Attention(AttnConfig& config, int BatchSize, int Heads);
     ~Attention() = default;
     void run();
     virtual void runFull();
@@ -55,7 +55,7 @@ public:
     void runFull() final;
 };
 
-
+*/
 void MultiHeadAttentionFull(const float *Q, const float *K, const float *V,
                             int QL, int QW, int KL, int KW, int HL, int Head,
                             float *res);

@@ -6,9 +6,7 @@
 #include <cmath>
 #include <memory.h>
 
-void AttnConfig::initQKV(int QL, int KL, int HL)
-{
-}
+
 
 void attention()
 {
@@ -127,8 +125,7 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
     for (int i = local_height; i < QL; ++i)
         for (int j = 0; j < local_width; ++j)
             for (int l = 0; l < HL; ++l)
-                temp_left[(i - local_height) * local_width + j] +=
-                    Q[i * HL + l] * K[j * HL + l];
+                temp_left[(i - local_height) * local_width + j] += Q[i * HL + l] * K[j * HL + l];
 
     /* compute ∑ef(i) */
     for (int i = 0; i < local_height; ++i)
@@ -273,3 +270,4 @@ void AttentionRandom(const float *Q, const float *K, const float *V,
     delete[] scores;
     delete[] line_exp_sum;
 }
+

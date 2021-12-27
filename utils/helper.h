@@ -3,9 +3,17 @@
 
 #include <iostream>
 #include <chrono>
-#include <string>
+#include <cstring>
+#include <cmath>
+#include <memory.h>
+
+#define max(x, y)  x > y ? x : y
+#define min(x, y)  x < y ? x : y
+#define random(x)  (rand() % x)
 
 using namespace std::chrono;
+using std::exp;
+using std::sqrt;
 
 class Clk
 {

@@ -1,7 +1,9 @@
+/**
+ * This file implement the SINGLE pattern attention functions come from BigBird.
+ */
 #include "include/attention.h"
 #include "utils/helper.h"
-#include <cmath>
-#include <memory.h>
+
 
 void attention()
 {
@@ -9,7 +11,7 @@ void attention()
 }
 
 /**
- * @brief Given the projected matrixs Q, K, V, compute the full attn scores.
+ * Given the projected matrixs Q, K, V, compute the full attn scores.
  * add all scores to res.
  * Serialize all SCCs, min fusion.
  *
@@ -62,8 +64,6 @@ void AttentionFull(const float *Q, const float *K, const float *V,
 }
 
 /**
- * @brief
- *
  * @param Q QL*QW -> before projected
  * @param K KL*QK
  * @param V KL*QK
@@ -92,8 +92,8 @@ void MultiHeadAttentionFull(const float *Q, const float *K, const float *V,
 }
 
 /**
- * @brief
  * compute global attention patterns
+ * TODO: Support any sequences pair that is symmetric along the diagonal
  * @param local_width local_size(number of blocks) * K_blocksize in BigBird paper
  * @param local_height local_size * Q_blocksize in BigBird paper
  */
@@ -122,8 +122,7 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
     for (int i = local_height; i < QL; ++i)
         for (int j = 0; j < local_width; ++j)
             for (int l = 0; l < HL; ++l)
-                temp_left[(i - local_height) * local_width + j] +=
-                    Q[i * HL + l] * K[j * HL + l];
+                temp_left[(i - local_height) * local_width + j] += Q[i * HL + l] * K[j * HL + l];
 
     /* compute ∑ef(i) */
     for (int i = 0; i < local_height; ++i)
@@ -146,10 +145,11 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
 
     for (int i = local_height; i < QL; ++i)
         for (int j = 0; j < local_width; ++j)
-            temp_left[(i - local_height) * local_width + j] =
-                exp(temp_left[(i - local_height) * local_width + j]) / line_exp_sum[i];
+            temp_left[(i - local_height) * local_width + j] = /*the Σei should contain all e0 = 1, that is (KL - local_width)*/
+                exp(temp_left[(i - local_height) * local_width + j]) /
+                (line_exp_sum[i] + KL - local_width); /* No LICM, avoiding create imperfect loop nest.
 
-    /* global score @ V */
+   /* global score @ V */
     /* part 1 */
     for (int i = 0; i < local_height; ++i)
         for (int j = 0; j < HL; ++j)
@@ -160,10 +160,14 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
         for (int j = 0; j < HL; ++j)
             for (int l = 0; l < local_width; ++l)
                 res[i * HL + j] += temp_left[(i - local_height) * local_width + l] * V[l * HL + j];
+
+    delete[] temp_top;
+    delete[] temp_left;
+    delete[] line_exp_sum;
 }
 
 /**
- * @brief Simple window attention in BigBird.
+ * Simple window attention in BigBird.
  * The most naive way: compute scores row by row.
  * @param window_len Window length in a row
  * @param window_height How many rows passed when the window are going to stride.
@@ -179,14 +183,88 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
     memset(temp, 0, QL * window_size * sizeof(float));
     memset(line_exp_sum, 0, QL * sizeof(float));
 
+    // for now we assume the first line window start from 0.
+    int first_line_padding = 0;
+
+    double dk_inv = 1.0 / sqrt(HL);
+
     for (int i = 0; i < QL; ++i)
     {
-        int window_start = 000000000000000;
-        int window_end = 0000000000000;
+        int window_start = first_line_padding + int(i / window_height) * window_stride;
+        int window_end = window_start + window_size;
+        window_start = max(window_start, 0);
+        window_end = min(window_end, KL);
+
         for (int j = window_start; j < window_end; ++j)
             for (int l = 0; l < HL; ++l)
-                temp[i * window_size + j - window_start] += Q[i * QL + l] * K[j * KL + l];
+                temp[i * window_size + j - window_start] += Q[i * HL + l] * K[j * HL + l];
     }
-
-    return;
+    /* softmax */
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < window_size; ++j)
+            line_exp_sum[i] += exp(temp[i * window_size + j]);
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < window_size; ++j)
+            temp[i * window_size + j] = exp(temp[i * window_size + j]*dk_inv) /
+                                            line_exp_sum[i] +
+                                        (KL - window_size);
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < HL; ++j)
+            for (int l = 0; l < window_size; ++l)
+            {
+                int col_start = first_line_padding + int(i / window_height) * window_stride;
+                res[i * HL + j] += temp[i * window_size + l] * V[max(col_start, 0) * l + j];
+            }
+    delete[] temp;
+    delete[] line_exp_sum;
 }
+
+/**
+ * For now, assume that random attention can exist between any two tokens.
+ *
+ * @param random_size the attention number of a query token.
+ */
+void AttentionRandom(const float *Q, const float *K, const float *V,
+                     int QL, int KL, int HL,
+                     int random_size,
+                     float *res)
+{
+    int *random_key_pos = new int[QL * random_size];
+    float *scores = new float[QL * random_size];
+    float *line_exp_sum = new float[QL];
+    memset(line_exp_sum, 0, QL * sizeof(float));
+    memset(scores, 0, QL * random_size * sizeof(float));
+
+    double dk_inv = 1.0 / sqrt(HL);
+    // generate a random matrix used to specify the token attend for each row
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < random_size; ++j)
+            random_key_pos[i * QL + j] = random(KL);
+    // compute scores as normal
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < random_size; ++j)
+            for (int l = 0; l < HL; ++l)
+            {
+                int col_pos = random_key_pos[i * random_size + j];
+                scores[i * random_size + col_pos] += Q[i * HL + l] * K[col_pos * HL + l];
+            }
+    for(int i = 0; i< QL; ++i)
+        for(int j =0; j<random_size; ++j)
+            line_exp_sum[i] += exp(random_key_pos[i*random_size+j]);
+    for(int i =0; i<QL; ++i)
+        for(int j = 0; j<random_size; ++j)
+            scores[i*random_size+j] = exp(scores[i*random_size+j]*dk_inv) / \
+            (line_exp_sum[i] + KL - random_size);
+
+    // compute attention result
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < HL; ++j)
+            for (int l = 0; l < random_size; ++l){
+                int row = random_key_pos[i*random_size+l];
+                res[i*HL + j] += scores[i*random_size+l] * V[row*HL + j];
+            }
+    delete[] random_key_pos;
+    delete[] scores;
+    delete[] line_exp_sum;
+}
+

@@ -6,6 +6,8 @@
 #include <cstring>
 #include <cmath>
 #include <memory.h>
+#include <memory>
+#include <omp.h>
 
 #define max(x, y)  x > y ? x : y
 #define min(x, y)  x < y ? x : y
@@ -14,6 +16,7 @@
 using namespace std::chrono;
 using std::exp;
 using std::sqrt;
+
 
 class Clk
 {
@@ -48,5 +51,9 @@ private:
 };
 
 void foo();
+void rand_init_matrix(int range, int row, int col, float * M);
+bool conflict(int num, int row);
+void generate_random_cols(int range, int len, int rand_size, bool (*fn)(int, int), int* res);
+
 
 #endif

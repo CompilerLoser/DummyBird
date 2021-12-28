@@ -2,9 +2,9 @@ cmake_minimum_required(VERSION 3.0)
 
 project(dummybird)
 
-set(PYTHON_INCLUDE_DIRS "/home/v-weifanghu/anaconda3/include/python3.9")
-set(PYTHON_LIBRARYS "/home/v-weifanghu/anaconda3/lib/libpython3.9.so")
-set(PYTHON_LINK_LIBRARYS "/home/v-weifanghu/anaconda3/lib/python3.9/config-3.9-x86_64-linux-gnu")
+#set(PYTHON_INCLUDE_DIRS "/home/v-weifanghu/anaconda3/include/python3.9")
+#set(PYTHON_LIBRARYS "/home/v-weifanghu/anaconda3/lib/libpython3.9.so")
+#set(PYTHON_LINK_LIBRARYS "/home/v-weifanghu/anaconda3/lib/python3.9/config-3.9-x86_64-linux-gnu")
 
 option(TIME OFF)
 

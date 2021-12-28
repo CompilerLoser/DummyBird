@@ -4,7 +4,6 @@
 #include "include/attention.h"
 #include "utils/helper.h"
 
-
 void attention()
 {
     foo();
@@ -205,7 +204,7 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
             line_exp_sum[i] += exp(temp[i * window_size + j]);
     for (int i = 0; i < QL; ++i)
         for (int j = 0; j < window_size; ++j)
-            temp[i * window_size + j] = exp(temp[i * window_size + j]*dk_inv) /
+            temp[i * window_size + j] = exp(temp[i * window_size + j] * dk_inv) /
                                             line_exp_sum[i] +
                                         (KL - window_size);
     for (int i = 0; i < QL; ++i)
@@ -221,7 +220,6 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
 
 /**
  * For now, assume that random attention can exist between any two tokens.
- *
  * @param random_size the attention number of a query token.
  */
 void AttentionRandom(const float *Q, const float *K, const float *V,
@@ -237,34 +235,86 @@ void AttentionRandom(const float *Q, const float *K, const float *V,
 
     double dk_inv = 1.0 / sqrt(HL);
     // generate a random matrix used to specify the token attend for each row
+    /*
     for (int i = 0; i < QL; ++i)
         for (int j = 0; j < random_size; ++j)
-            random_key_pos[i * QL + j] = random(KL);
+            random_key_pos[i * random_size + j] = random(KL); // may be duplicate
+            */
+    generate_random_cols(KL, QL, random_size, conflict, random_key_pos);
     // compute scores as normal
     for (int i = 0; i < QL; ++i)
         for (int j = 0; j < random_size; ++j)
             for (int l = 0; l < HL; ++l)
             {
                 int col_pos = random_key_pos[i * random_size + j];
-                scores[i * random_size + col_pos] += Q[i * HL + l] * K[col_pos * HL + l];
+                scores[i * random_size + j] += Q[i * HL + l] * K[col_pos * HL + l];
             }
-    for(int i = 0; i< QL; ++i)
-        for(int j =0; j<random_size; ++j)
-            line_exp_sum[i] += exp(random_key_pos[i*random_size+j]);
-    for(int i =0; i<QL; ++i)
-        for(int j = 0; j<random_size; ++j)
-            scores[i*random_size+j] = exp(scores[i*random_size+j]*dk_inv) / \
-            (line_exp_sum[i] + KL - random_size);
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < random_size; ++j)
+            line_exp_sum[i] += exp(random_key_pos[i * random_size + j]);
+    for (int i = 0; i < QL; ++i)
+        for (int j = 0; j < random_size; ++j)
+            scores[i * random_size + j] = exp(scores[i * random_size + j] * dk_inv) /
+                                          (line_exp_sum[i] + KL - random_size);
 
     // compute attention result
     for (int i = 0; i < QL; ++i)
         for (int j = 0; j < HL; ++j)
-            for (int l = 0; l < random_size; ++l){
-                int row = random_key_pos[i*random_size+l];
-                res[i*HL + j] += scores[i*random_size+l] * V[row*HL + j];
+            for (int l = 0; l < random_size; ++l)
+            {
+                int row = random_key_pos[i * random_size + l];
+                res[i * HL + j] += scores[i * random_size + l] * V[row * HL + j];
             }
     delete[] random_key_pos;
     delete[] scores;
     delete[] line_exp_sum;
 }
 
+static void project(const float *Mat, const float *WMat, int M, int N, int L, float *res)
+{
+    memset(res, 0, M * L * sizeof(float));
+    for (int i = 0; i < M; ++i)
+        for (int j = 0; j < L; ++j)
+            for (int l = 0; l < N; ++l)
+                res[i * M + j] += Mat[i * M + l] * WMat[l * N + j];
+}
+
+void MultiHeadAttentionRandom(const float *QS, const float *KS, const float *VS,
+                              int QL, int QW, int KL, int KW, int HL,
+                              int Head, int random_size,
+                              float *res)
+{
+
+    float *WQ = new float[Head * QW * HL];
+    float *WK = new float[Head * KW * HL];
+    float *WV = new float[Head * KW * HL];
+
+    float *Q = new float[Head * QL * HL];
+    float *K = new float[Head * KL * HL];
+    float *V = new float[Head * KL * HL];
+
+    memset(res, 0, Head * QL * HL * sizeof(float));
+
+    rand_init_matrix(100, QW, HL * Head, WQ);
+    rand_init_matrix(100, KW, HL * Head, WK);
+    rand_init_matrix(100, KW, HL * Head, WV);
+
+    for (int i = 0; i < Head; ++i)
+    {
+        project(QS, &WQ[i * QW * HL], QL, QW, HL, &Q[i*QL*HL]);
+        project(KS, &WK[i * KW * HL], KL, KW, HL, &K[i* KL *HL]);
+        project(VS, &WV[i * KW * HL], KL, KW, HL, &V[i *KL *HL]);
+    }
+
+    for(int i =0; i < Head; ++i)
+    {
+        AttentionRandom(&Q[i*QL*HL], &K[i* KL *HL], &V[i*KL*HL], QL, KL, HL, random_size, &res[i*QL*HL]);
+    }
+
+    delete[] WQ;
+    delete[] WK;
+    delete[] WV;
+    delete[] Q;
+    delete[] K;
+    delete[] V;
+}

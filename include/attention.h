@@ -79,4 +79,9 @@ void AttentionRandom(const float *Q, const float *K, const float *V,
                      int random_size,
                      float *res);
 
+void MultiHeadAttentionRandom(const float *QS, const float *KS, const float *VS,
+                              int QL, int QW, int KL, int KW, int HL,
+                              int Head, int random_size,
+                              float *res);
+
 #endif

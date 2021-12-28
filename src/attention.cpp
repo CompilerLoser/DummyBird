@@ -32,9 +32,9 @@ void AttentionFull(const float *Q, const float *K, const float *V,
     memset(line_exp_sum, 0, QL * sizeof(float));
 
     double dk_inv = 1.0 / sqrt(HL);
-
-    for (int i = 0; i < QL; ++i)
-        for (int j = 0; j < KL; ++j)
+                                    //temp[ , ] = Q[ , ] @ K[ , ] load two 2D-Tensor and reduce to a 2D Tensor///load two sequences 1D-Tensors and reduce them to a sequence of 1D-Tensor
+    for (int i = 0; i < QL; ++i)    //temp[i, ] = Q[i, ] @ K[ , ] Load a 1D-Tensor and a 2D-Tensor and reduce to a 1D-Tensor /// load a 1D-Tensor and a sequences of 1D-Tensor, reduce them to a 1-D tensor 
+        for (int j = 0; j < KL; ++j)//temp[i,j] = Q[i, ] @ K[j, ] Load two 1D-Tensor and reduce to a 0D-Tensor ///what grad should we use to analysis the accesses?
             for (int l = 0; l < HL; ++l)
                 /*  temp[i][j] = reduce_sum(Q[i][l] * Kt[l][j])
                  *             = reduce_sum(Q[i][l] * K[j][l])   */
@@ -56,7 +56,7 @@ void AttentionFull(const float *Q, const float *K, const float *V,
         for (int h = 0; h < HL; ++h)
             for (int l = 0; l < KL; ++l)
                 /* res[i][h] += temp[i][l] * V[l][h] */
-                res[i * HL + h] += temp[i * KL + l] * V[l * HL + h];
+                res[i * HL + h] += temp[i * KL + l] * V[l * HL + h];///same
 
     delete[] temp;
     delete[] line_exp_sum;
@@ -115,7 +115,9 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
         for (int j = 0; j < KL; ++j)
             for (int l = 0; l < HL; ++l)
                 /* temp[i][j] = reduce_sum(Q[i][l] * K[j][l]) */
-                temp_top[i * KL + j] += Q[i * HL + l] * K[j * HL + l];
+                temp_top[i * KL + j] += Q[i * HL + l] * K[j * HL + l];///the accesses pattern are same with full attention but note that 
+                                                        ///here the reduced 1D-Tensor have dynamic length(shape) depends on this tensors position in a 2D-Tensor
+                                                        ///seems like random attentions access can also be viewed as a sequences of dynamic shape 1D-Tensor loading process.
 
     /* compute left *local_width* cols but remove top *local_height* rows. */
     for (int i = local_height; i < QL; ++i)
@@ -148,13 +150,13 @@ void AttentionGlobal(const float *Q, const float *K, const float *V,
                 exp(temp_left[(i - local_height) * local_width + j]) /
                 (line_exp_sum[i] + KL - local_width); /* No LICM, avoiding create imperfect loop nest.
 
-   /* global score @ V */
+    /* global score @ V */
     /* part 1 */
     for (int i = 0; i < local_height; ++i)
         for (int j = 0; j < HL; ++j)
             for (int l = 0; l < KL; ++l)
-                res[i * HL + j] += temp_top[i * KL + l] * V[l * HL + j];
-    /*part 2 */
+                res[i * HL + j] += temp_top[i * KL + l] * V[l * HL + j];/// A 1D-Tensor used for reduce have dynamic shape.
+    /* part 2 */
     for (int i = local_height; i < QL; ++i)
         for (int j = 0; j < HL; ++j)
             for (int l = 0; l < local_width; ++l)
@@ -196,7 +198,9 @@ void AttentionWindow(const float *Q, const float *K, const float *V,
 
         for (int j = window_start; j < window_end; ++j)
             for (int l = 0; l < HL; ++l)
-                temp[i * window_size + j - window_start] += Q[i * HL + l] * K[j * HL + l];
+                temp[i * window_size + j - window_start] += Q[i * HL + l] * K[j * HL + l];///Sequences 1D-Tensor load + sequences (buffer and update) 1D-Tensor load
+                                                                                          ///Sequences 1D-Tensor load + sequences (silde window) 1D-Tensor load
+                                                                                          ///Sequences 1D-Temsor load + sequences (strided) 1D-Tensor load
     }
     /* softmax */
     for (int i = 0; i < QL; ++i)
@@ -247,7 +251,7 @@ void AttentionRandom(const float *Q, const float *K, const float *V,
             for (int l = 0; l < HL; ++l)
             {
                 int col_pos = random_key_pos[i * random_size + j];
-                scores[i * random_size + j] += Q[i * HL + l] * K[col_pos * HL + l];
+                scores[i * random_size + j] += Q[i * HL + l] * K[col_pos * HL + l]; ///sequence 1D-Tensor load and indexed 1D-tensor load
             }
     for (int i = 0; i < QL; ++i)
         for (int j = 0; j < random_size; ++j)

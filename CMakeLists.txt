@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.8 FATAL_ERROR)
 
-project(dummybird)
+project(dummybird LANGUAGES CXX CUDA)
 
 #set(PYTHON_INCLUDE_DIRS "/home/v-weifanghu/anaconda3/include/python3.9")
 #set(PYTHON_LIBRARYS "/home/v-weifanghu/anaconda3/lib/libpython3.9.so")
 #set(PYTHON_LINK_LIBRARYS "/home/v-weifanghu/anaconda3/lib/python3.9/config-3.9-x86_64-linux-gnu")
+#set(CMAKE_CUDA_FLAGS "-arch=sm_75")
 
 option(TIME OFF)
 
@@ -40,4 +41,4 @@ target_link_libraries(
     utils
 )  
 
-
+set_property(TARGET dummybird PROPERTY CUDA_ARCHITECTURES 75)
